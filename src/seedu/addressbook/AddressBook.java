@@ -212,7 +212,6 @@ public class AddressBook {
         loadDataFromStorage();
         while (true) {
             String userCommand = getUserInput();
-            echoUserCommand(userCommand);
             String feedback = executeCommand(userCommand);
             showResultToUser(feedback);
         }
@@ -601,8 +600,9 @@ public class AddressBook {
     private static String getUserInput() {
         System.out.print(LINE_PREFIX + "Enter command: ");
         String inputLine = SCANNER.nextLine();
-        
-        return removeBlankAndCommentLines(inputLine);
+        String editedLines = removeBlankAndCommentLines(inputLine);
+        echoUserCommand(editedLines);
+        return editedLines;
     }
     // silently consume all blank and comment lines
 	private static String removeBlankAndCommentLines(String inputLine) {
@@ -993,12 +993,12 @@ public class AddressBook {
 
         // phone is last arg, target is from prefix to end of string
         if (indexOfPhonePrefix > indexOfEmailPrefix) {
-            return removePrefixSign(encoded.substring(indexOfPhonePrefix, encoded.length()).trim(),
+            return removePrefix(encoded.substring(indexOfPhonePrefix, encoded.length()).trim(),
                     PERSON_DATA_PREFIX_PHONE);
 
         // phone is middle arg, target is from own prefix to next prefix
         } else {
-            return removePrefixSign(
+            return removePrefix(
                     encoded.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim(),
                     PERSON_DATA_PREFIX_PHONE);
         }
@@ -1016,12 +1016,12 @@ public class AddressBook {
 
         // email is last arg, target is from prefix to end of string
         if (indexOfEmailPrefix > indexOfPhonePrefix) {
-            return removePrefixSign(encoded.substring(indexOfEmailPrefix, encoded.length()).trim(),
+            return removePrefix(encoded.substring(indexOfEmailPrefix, encoded.length()).trim(),
                     PERSON_DATA_PREFIX_EMAIL);
 
         // email is middle arg, target is from own prefix to next prefix
         } else {
-            return removePrefixSign(
+            return removePrefix(
                     encoded.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim(),
                     PERSON_DATA_PREFIX_EMAIL);
         }
@@ -1150,8 +1150,8 @@ public class AddressBook {
     /**
      * Removes sign(p/, d/, etc) from parameter string
      */
-    private static String removePrefixSign(String stringToBeReplaced, String sign) {
-        return stringToBeReplaced.replace(sign, "");
+    private static String removePrefix(String stringToBeReplaced, String prefix) {
+        return stringToBeReplaced.replace(prefix, "");
     }
 
     /**
