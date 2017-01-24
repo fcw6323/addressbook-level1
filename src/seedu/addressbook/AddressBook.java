@@ -207,6 +207,7 @@ public class AddressBook {
      */
 
     public static void main(String[] args) {
+    	//System.out.println(formatNames("jacob yao jun jie"));
         showWelcomeMessage();
         processProgramArgs(args);
         loadDataFromStorage();
@@ -483,6 +484,9 @@ public class AddressBook {
      */
     private static ArrayList<String[]> getPersonsWithNameContainingAnyKeyword(Collection<String> keywords) {
         final ArrayList<String[]> matchedPersons = new ArrayList<>();
+        
+        formatCollection(keywords);
+        
         for (String[] person : getAllPersonsInAddressBook()) {
             final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getNameFromPerson(person)));
             if (!Collections.disjoint(wordsInName, keywords)) {
@@ -491,7 +495,50 @@ public class AddressBook {
         }
         return matchedPersons;
     }
+    
+    
+    /**
+     *  Formats entire collection based on formatNames() implementation
+     *  
+     */
+	private static void formatCollection(Collection<String> keywords) {
+		for(String str : keywords){
+        	keywords.add(formatNames(str));
+        	keywords.remove(str);
+        }
+	}
+    
 
+
+
+    /**
+     *  Converts any case words to specific formatting
+     *  i.e. jAcK dOe ==> Jack Doe (first letter of the word caps) 
+     */
+    private static String formatNames(String name){
+    	name = name.toLowerCase();
+    	String formattedName = name.substring(0,1).toUpperCase();
+    	boolean isWhitespace = false;
+    	for(int i=1;i<name.length();i++){
+    		if(name.charAt(i)==' '){
+    			isWhitespace = true;
+    			formattedName = formattedName + name.substring(i,i+1);
+    		}
+    		else{
+    			if(isWhitespace){
+    				formattedName = formattedName + name.substring(i,i+1).toUpperCase();
+    				isWhitespace = false;
+    			}
+    			else{
+    				formattedName = formattedName + name.substring(i,i+1);
+    			}
+    		}
+    	}
+    	
+    	return formattedName;
+    }
+    
+    
     /**
      * Deletes person identified using last displayed index.
      *
