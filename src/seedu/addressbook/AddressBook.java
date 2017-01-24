@@ -207,7 +207,6 @@ public class AddressBook {
      */
 
     public static void main(String[] args) {
-    	//System.out.println(formatNames("jacob yao jun jie"));
         showWelcomeMessage();
         processProgramArgs(args);
         loadDataFromStorage();
