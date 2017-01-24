@@ -207,13 +207,27 @@ public class AddressBook {
      */
 
     public static void main(String[] args) {
-        showWelcomeMessage();
-        processProgramArgs(args);
-        loadDataFromStorage();
+        showToUser(DIVIDER, DIVIDER, VERSION, MESSAGE_WELCOME, DIVIDER);
+        
+        //processProgramArgs(args) function
+        if (args.length >= 2) {
+            showToUser(MESSAGE_INVALID_PROGRAM_ARGS);
+            exitProgram();
+        }
+
+        if (args.length == 1) {
+            setupGivenFileForStorage(args[0]);
+        }
+
+        if(args.length == 0) {
+            setupDefaultFileForStorage();
+        }
+        
+        initialiseAddressBookModel(loadPersonsFromFile(storageFilePath));
         while (true) {
             String userCommand = getUserInput();
             String feedback = executeCommand(userCommand);
-            showResultToUser(feedback);
+            showToUser(feedback, DIVIDER);
         }
     }
 
@@ -255,20 +269,7 @@ public class AddressBook {
      *
      * @param args full program arguments passed to application main method
      */
-    private static void processProgramArgs(String[] args) {
-        if (args.length >= 2) {
-            showToUser(MESSAGE_INVALID_PROGRAM_ARGS);
-            exitProgram();
-        }
 
-        if (args.length == 1) {
-            setupGivenFileForStorage(args[0]);
-        }
-
-        if(args.length == 0) {
-            setupDefaultFileForStorage();
-        }
-    }
 
     /**
      * Sets up the storage file based on the supplied file path.
@@ -278,7 +279,10 @@ public class AddressBook {
     private static void setupGivenFileForStorage(String filePath) {
 
         if (!isValidFilePath(filePath)) {
-            showToUser(String.format(MESSAGE_INVALID_FILE, filePath));
+            String[] message = { String.format(MESSAGE_INVALID_FILE, filePath) };
+			for (String m : message) {
+			    System.out.println(LINE_PREFIX + m);
+			}
             exitProgram();
         }
 
@@ -347,7 +351,8 @@ public class AddressBook {
      * Assumption: The file exists.
      */
     private static void loadDataFromStorage() {
-        initialiseAddressBookModel(loadPersonsFromFile(storageFilePath));
+        ALL_PERSONS.clear();
+		ALL_PERSONS.addAll(loadPersonsFromFile(storageFilePath));
     }
 
 
@@ -420,7 +425,9 @@ public class AddressBook {
 
         // checks if args are valid (decode result will not be present if the person is invalid)
         if (!decodeResult.isPresent()) {
-            return getMessageForInvalidCommandInput(COMMAND_ADD_WORD, getUsageInfoForAddCommand());
+            return getMessageForInvalidCommandInput("add", String.format(MESSAGE_COMMAND_HELP, COMMAND_ADD_WORD, COMMAND_ADD_DESC) + LS
+			+ String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_ADD_PARAMETERS) + LS
+			+ String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_ADD_EXAMPLE) + LS);
         }
 
         // add the person as specified
@@ -462,7 +469,7 @@ public class AddressBook {
      * @return summary message for persons displayed
      */
     private static String getMessageForPersonsDisplayedSummary(ArrayList<String[]> personsDisplayed) {
-        return String.format(MESSAGE_PERSONS_FOUND_OVERVIEW, personsDisplayed.size());
+        return String.format("%1$d persons found!", personsDisplayed.size());
     }
 
     /**
@@ -503,7 +510,7 @@ public class AddressBook {
             return getMessageForInvalidCommandInput(COMMAND_DELETE_WORD, getUsageInfoForDeleteCommand());
         }
         final int targetVisibleIndex = extractTargetIndexFromDeletePersonArgs(commandArgs);
-        if (!isDisplayIndexValidForLastPersonListingView(targetVisibleIndex)) {
+        if (!(targetVisibleIndex >= DISPLAYED_INDEX_OFFSET && targetVisibleIndex < latestPersonListingView.size() + DISPLAYED_INDEX_OFFSET)) {
             return MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
         }
         final String[] targetInModel = getPersonByLastVisibleIndex(targetVisibleIndex);
@@ -600,7 +607,10 @@ public class AddressBook {
     private static String getUserInput() {
         System.out.print(LINE_PREFIX + "Enter command: ");
         String inputLine = SCANNER.nextLine();
-        String editedLines = removeBlankAndCommentLines(inputLine);
+		while (inputLine.trim().isEmpty() || inputLine.trim().charAt(0) == INPUT_COMMENT_MARKER) {
+		    inputLine = SCANNER.nextLine();
+		}
+        String editedLines = inputLine;
         echoUserCommand(editedLines);
         return editedLines;
     }
