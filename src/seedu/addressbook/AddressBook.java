@@ -87,6 +87,7 @@ public class AddressBook {
     private static final String MESSAGE_ERROR_READING_FROM_FILE = "Unexpected error: unable to read from file: %1$s";
     private static final String MESSAGE_ERROR_WRITING_TO_FILE = "Unexpected error: unable to write to file: %1$s";
     private static final String MESSAGE_PERSONS_FOUND_OVERVIEW = "%1$d persons found!";
+    private static final String MESSAGE_PERSONS_SORTED = "%d persons sorted!";
     private static final String MESSAGE_STORAGE_FILE_CREATED = "Created new empty storage file: %1$s";
     private static final String MESSAGE_WELCOME = "Welcome to your Address Book!";
     private static final String MESSAGE_USING_DEFAULT_FILE = "Using default storage file : " + DEFAULT_STORAGE_FILEPATH;
@@ -98,6 +99,10 @@ public class AddressBook {
     private static final String PERSON_STRING_REPRESENTATION = "%1$s " // name
                                                             + PERSON_DATA_PREFIX_PHONE + "%2$s " // phone
                                                             + PERSON_DATA_PREFIX_EMAIL + "%3$s"; // email
+    
+    private static final String COMMAND_SORT_WORD = "sort";
+    private static final String COMMAND_SORT_DESC = "Sorts the list of people's names in alphabetical order";
+    
     private static final String COMMAND_ADD_WORD = "add";
     private static final String COMMAND_ADD_DESC = "Adds a person to the address book.";
     private static final String COMMAND_ADD_PARAMETERS = "NAME "
@@ -183,6 +188,7 @@ public class AddressBook {
      */
     private static final ArrayList<String[]> ALL_PERSONS = new ArrayList<>();
 
+
     /**
      * Stores the most recent list of persons shown to the user as a result of a user command.
      * This is a subset of the full list. Deleting persons in the pull list does not delete
@@ -207,6 +213,7 @@ public class AddressBook {
      */
 
     public static void main(String[] args) {
+    	
         showWelcomeMessage();
         processProgramArgs(args);
         loadDataFromStorage();
@@ -368,6 +375,8 @@ public class AddressBook {
         final String commandType = commandTypeAndParams[0];
         final String commandArgs = commandTypeAndParams[1];
         switch (commandType) {
+        case COMMAND_SORT_WORD:
+        	return executeSortPersons();
         case COMMAND_ADD_WORD:
             return executeAddPerson(commandArgs);
         case COMMAND_FIND_WORD:
@@ -388,6 +397,39 @@ public class AddressBook {
     }
 
     /**
+     * Sorts persons in ALL_PERSONS alphabetically 
+     * @return message to indicate number of people sorted
+     */
+    private static String executeSortPersons() {
+    	bubbleSort(getAllPersonsInAddressBook());
+    	showToUser(getAllPersonsInAddressBook());
+    	savePersonsToFile(getAllPersonsInAddressBook(), storageFilePath);
+    	return getMessageForSortedPersons();      
+	}
+
+    
+	private static String getMessageForSortedPersons() {
+		return String.format(MESSAGE_PERSONS_SORTED, getAllPersonsInAddressBook().size());
+	}
+
+
+	private static void bubbleSort(ArrayList<String[]> allPersonsToBeSorted) {
+		for(int i=0;i<allPersonsToBeSorted.size()-1;i++){
+    		for(int j=i+1;j<allPersonsToBeSorted.size();j++){
+    			String[] person1 = allPersonsToBeSorted.get(i);
+    			String[] person2 = allPersonsToBeSorted.get(j);
+    			String name1 = getNameFromPerson(person1);
+    			String name2 = getNameFromPerson(person2);
+    			if(name1.compareTo(name2) > 0){
+    				String[] temp = person1;
+    				allPersonsToBeSorted.set(i,person2);
+    				allPersonsToBeSorted.set(j,temp);
+    			}
+    		}
+    	}
+	}
+
+	/**
      * Splits raw user input into command word and command arguments string
      *
      * @return  size 2 array; first element is the command type and second element is the arguments string
@@ -503,11 +545,8 @@ public class AddressBook {
 	private static void formatCollection(Collection<String> keywords) {
 		for(String str : keywords){
         	keywords.add(formatNames(str));
-        	keywords.remove(str);
         }
 	}
-    
-
 
 
     /**
